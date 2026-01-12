@@ -1,39 +1,192 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { APITester } from "./APITester";
-import "./index.css";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { RoleProtectedRoute } from '@/components/auth/RoleProtectedRoute';
+import { OAuthCallback } from '@/components/auth/OAuthCallback';
+import { Layout } from '@/components/layout/Layout';
+import { Toaster } from '@/components/ui/sonner';
 
-import logo from "./logo.svg";
-import reactLogo from "./react.svg";
+// Public pages
+import { Index } from '@/pages/public/Index';
+import { Events } from '@/pages/public/Events';
+import { EventDetail } from '@/pages/public/EventDetail';
+
+// Customer pages
+import { Checkout } from '@/pages/customer/Checkout';
+import { MyTickets } from '@/pages/customer/MyTickets';
+import { Bookings } from '@/pages/customer/Bookings';
+import { BookingDetail } from '@/pages/customer/BookingDetail';
+
+// Organizer pages
+import { OrganizerDashboard } from '@/pages/organizer/Dashboard';
+import { ManageEvents } from '@/pages/organizer/ManageEvents';
+import { CreateEvent } from '@/pages/organizer/CreateEvent';
+import { EditEvent } from '@/pages/organizer/EditEvent';
+import { EventAnalytics } from '@/pages/organizer/EventAnalytics';
+import { EventBookings } from '@/pages/organizer/EventBookings';
+import { Checkin } from '@/pages/organizer/Checkin';
 
 export function App() {
   return (
-    <div className="container mx-auto p-8 text-center relative z-10">
-      <div className="flex justify-center items-center gap-8 mb-8">
-        <img
-          src={logo}
-          alt="Bun Logo"
-          className="h-36 p-6 transition-all duration-300 hover:drop-shadow-[0_0_2em_#646cffaa] scale-120"
-        />
-        <img
-          src={reactLogo}
-          alt="React Logo"
-          className="h-36 p-6 transition-all duration-300 hover:drop-shadow-[0_0_2em_#61dafbaa] [animation:spin_20s_linear_infinite]"
-        />
-      </div>
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          {/* Routes with layout */}
+          <Route element={<Layout />}>
+            {/* Public routes */}
+            <Route path="/" element={<Index />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/events/:id" element={<EventDetail />} />
 
-      <Card className="bg-card/50 backdrop-blur-sm border-muted">
-        <CardContent className="pt-6">
-          <h1 className="text-5xl font-bold my-4 leading-tight">Bun + React</h1>
-          <p>
-            Edit{" "}
-            <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm">src/App.tsx</code> and
-            save to test HMR
-          </p>
-          <APITester />
-        </CardContent>
-      </Card>
-    </div>
+          {/* Customer protected routes */}
+          <Route
+            path="/checkout/:eventId"
+            element={
+              <ProtectedRoute>
+                <Checkout />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-tickets"
+            element={
+              <ProtectedRoute>
+                <MyTickets />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bookings"
+            element={
+              <ProtectedRoute>
+                <Bookings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bookings/:id"
+            element={
+              <ProtectedRoute>
+                <BookingDetail />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Organizer protected routes */}
+          <Route
+            path="/organizer"
+            element={
+              <RoleProtectedRoute requiredRole="organizer">
+                <OrganizerDashboard />
+              </RoleProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/events"
+            element={
+              <RoleProtectedRoute requiredRole="organizer">
+                <ManageEvents />
+              </RoleProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/events/new"
+            element={
+              <RoleProtectedRoute requiredRole="organizer">
+                <CreateEvent />
+              </RoleProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/events/:id/edit"
+            element={
+              <RoleProtectedRoute requiredRole="organizer">
+                <EditEvent />
+              </RoleProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/events/:id/analytics"
+            element={
+              <RoleProtectedRoute requiredRole="organizer">
+                <EventAnalytics />
+              </RoleProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/events/:id/checkin"
+            element={
+              <RoleProtectedRoute requiredRole="organizer">
+                <Checkin />
+              </RoleProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/events/:id/bookings"
+            element={
+              <RoleProtectedRoute requiredRole="organizer">
+                <EventBookings />
+              </RoleProtectedRoute>
+            }
+          />
+          </Route>
+
+          {/* Routes without layout */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/auth/callback" element={<OAuthCallback />} />
+        </Routes>
+        <Toaster />
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
+
+// Login page
+const Login = () => {
+  const AUTH_SERVICE_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8081';
+  const redirectUri = `${window.location.origin}/auth/callback`;
+
+  const handleGoogleLogin = () => {
+    window.location.href = `${AUTH_SERVICE_URL}/api/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}`;
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
+      <div className="max-w-md w-full p-8">
+        <div className="bg-card rounded-lg shadow-lg p-8">
+          <h1 className="text-3xl font-bold text-center mb-2">Welcome Back</h1>
+          <p className="text-center text-muted-foreground mb-8">
+            Sign in to access your tickets and bookings
+          </p>
+
+          <button
+            onClick={handleGoogleLogin}
+            className="w-full bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-3"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24">
+              <path
+                fill="currentColor"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              />
+            </svg>
+            Continue with Google
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default App;

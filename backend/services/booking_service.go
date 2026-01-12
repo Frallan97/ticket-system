@@ -219,7 +219,81 @@ func CreateBooking(ctx context.Context, customerID uuid.UUID, req models.CreateB
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
+	// Send confirmation email asynchronously (don't fail if email fails)
+	go func() {
+		emailService := NewEmailService()
+		if err := sendBookingConfirmationEmail(ctx, emailService, &booking, req.EventID); err != nil {
+			// Log error but don't fail the booking
+			fmt.Printf("Failed to send confirmation email: %v\n", err)
+		}
+	}()
+
 	return &booking, nil
+}
+
+// sendBookingConfirmationEmail sends a confirmation email for a booking
+func sendBookingConfirmationEmail(ctx context.Context, emailService *EmailService, booking *models.Booking, eventID int) error {
+	// Fetch event details
+	var eventTitle, venueName string
+	var venueAddress *string
+	var eventDate string
+
+	err := database.DB.QueryRowContext(ctx,
+		`SELECT title, venue_name, venue_address, event_date FROM events WHERE id = $1`,
+		eventID).Scan(&eventTitle, &venueName, &venueAddress, &eventDate)
+	if err != nil {
+		return fmt.Errorf("failed to fetch event details: %w", err)
+	}
+
+	// Fetch tickets for this booking
+	rows, err := database.DB.QueryContext(ctx,
+		`SELECT t.ticket_code, tt.name, s.section, s.row_label, s.seat_number
+		 FROM tickets t
+		 JOIN ticket_types tt ON t.ticket_type_id = tt.id
+		 LEFT JOIN seats s ON t.seat_id = s.id
+		 WHERE t.booking_id = $1`,
+		booking.ID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch tickets: %w", err)
+	}
+	defer rows.Close()
+
+	var tickets []TicketInfo
+	for rows.Next() {
+		var ticket TicketInfo
+		var section, rowLabel, seatNumber *string
+
+		if err := rows.Scan(&ticket.TicketCode, &ticket.TicketType, &section, &rowLabel, &seatNumber); err != nil {
+			continue
+		}
+
+		if section != nil && rowLabel != nil && seatNumber != nil {
+			ticket.SeatInfo = fmt.Sprintf("%s - Row %s, Seat %s", *section, *rowLabel, *seatNumber)
+		}
+
+		tickets = append(tickets, ticket)
+	}
+
+	// Prepare email data
+	emailData := TicketConfirmationData{
+		CustomerName:     booking.CustomerName,
+		EventTitle:       eventTitle,
+		EventDate:        eventDate[:10], // Just the date part
+		EventTime:        eventDate[11:16], // Just the time part
+		VenueName:        venueName,
+		VenueAddress:     "",
+		BookingReference: booking.BookingReference,
+		TicketCount:      len(tickets),
+		TotalAmount:      fmt.Sprintf("$%.2f", booking.TotalAmount),
+		Tickets:          tickets,
+	}
+
+	if venueAddress != nil {
+		emailData.VenueAddress = *venueAddress
+	}
+
+	// Send email
+	return emailService.SendTicketConfirmation(booking.CustomerEmail, emailData)
 }
 
 // GetBookingByID retrieves a booking by ID
