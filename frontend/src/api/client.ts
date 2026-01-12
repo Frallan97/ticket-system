@@ -1,12 +1,12 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 // In production, use same domain via ingress. In development, use localhost.
-const API_URL = import.meta.env.VITE_API_URL || (
+const API_URL = import.meta.env?.VITE_API_URL || (
   typeof window !== 'undefined' && !window.location.origin.includes('localhost')
     ? `${window.location.origin}/api/v1`
     : 'http://localhost:8080/api/v1'
 );
-const AUTH_SERVICE_URL = import.meta.env.VITE_AUTH_SERVICE_URL || 'http://localhost:8081';
+const AUTH_SERVICE_URL = import.meta.env?.VITE_AUTH_SERVICE_URL || 'http://localhost:8081';
 
 // Create axios instance
 export const apiClient = axios.create({
