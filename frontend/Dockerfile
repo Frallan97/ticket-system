@@ -12,6 +12,10 @@ RUN bun install --frozen-lockfile
 # Copy source files
 COPY . .
 
+# Set build-time environment variables for Vite
+ENV VITE_API_URL=https://ticket.vibeoholic.com/api/v1
+ENV VITE_AUTH_SERVICE_URL=https://auth.vibeoholic.com
+
 # Build the application
 RUN bun run build
 
