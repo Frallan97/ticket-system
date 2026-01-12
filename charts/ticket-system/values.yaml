@@ -26,6 +26,20 @@ backend:
     MINIO_USE_SSL: "false"
     MINIO_BUCKET: "event-images"
 
+frontend:
+  image:
+    repository: ghcr.io/frallan97/ticket-system-frontend
+    tag: latest
+    pullPolicy: Always
+
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+
 postgres:
   enabled: true
   image: postgres:15-alpine
@@ -71,6 +85,8 @@ minio:
 
 service:
   type: ClusterIP
+  frontend:
+    port: 80
   backend:
     port: 8080
   postgres:
