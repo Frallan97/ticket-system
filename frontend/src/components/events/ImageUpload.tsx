@@ -58,8 +58,14 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       const formData = new FormData();
       formData.append('image', selectedFile);
 
+      const API_URL = import.meta.env?.VITE_API_URL || (
+        typeof window !== 'undefined' && !window.location.origin.includes('localhost')
+          ? `${window.location.origin}/api/v1`
+          : 'http://localhost:8080/api/v1'
+      );
+
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/events/${eventId}/image`,
+        `${API_URL}/events/${eventId}/image`,
         {
           method: 'POST',
           headers: {
