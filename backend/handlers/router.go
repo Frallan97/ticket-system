@@ -32,6 +32,27 @@ func SetupRouter(cfg *config.Config, enforcer *casbin.Enforcer) http.Handler {
 	r.Use(middleware.Recovery)
 	r.Use(ConfigMiddleware(cfg))
 
+	// Root path handler
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{
+			"service": "Ticket System API",
+			"version": "1.0.0",
+			"status": "running",
+			"endpoints": {
+				"health": "/api/v1/health",
+				"events": "/api/v1/events",
+				"auth": "/api/v1/auth/me",
+				"docs": "https://github.com/Frallan97/ticket-system"
+			}
+		}`))
+	}).Methods("GET", "OPTIONS")
+
 	// API v1 routes
 	api := r.PathPrefix("/api/v1").Subrouter()
 
