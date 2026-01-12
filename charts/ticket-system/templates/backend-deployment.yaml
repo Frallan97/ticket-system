@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: backend
+    app.kubernetes.io/name: ticket-system
+    app.kubernetes.io/component: backend
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      containers:
+      - name: backend
+        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+        imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.backend.env.PORT }}
+          name: http
+          protocol: TCP
+        env:
+        - name: PORT
+          value: "{{ .Values.backend.env.PORT }}"
+        - name: ENVIRONMENT
+          value: "{{ .Values.backend.env.ENVIRONMENT }}"
+        - name: DEBUG
+          value: "{{ .Values.backend.env.DEBUG }}"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: ticket-system-secrets
+              key: database-url
+        - name: AUTH_SERVICE_URL
+          value: "{{ .Values.backend.env.AUTH_SERVICE_URL }}"
+        - name: JWT_PUBLIC_KEY_URL
+          value: "{{ .Values.backend.env.JWT_PUBLIC_KEY_URL }}"
+        - name: ALLOWED_ORIGINS
+          value: "{{ .Values.backend.env.ALLOWED_ORIGINS }}"
+        - name: CASBIN_MODEL_PATH
+          value: "{{ .Values.backend.env.CASBIN_MODEL_PATH }}"
+        - name: MINIO_ENDPOINT
+          value: "{{ .Values.backend.env.MINIO_ENDPOINT }}"
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ticket-system-secrets
+              key: minio-access-key
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ticket-system-secrets
+              key: minio-secret-key
+        - name: MINIO_USE_SSL
+          value: "{{ .Values.backend.env.MINIO_USE_SSL }}"
+        - name: MINIO_BUCKET
+          value: "{{ .Values.backend.env.MINIO_BUCKET }}"
+        resources:
+          {{- toYaml .Values.backend.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3

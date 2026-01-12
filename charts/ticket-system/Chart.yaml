@@ -1,0 +1,8 @@
+apiVersion: v2
+name: ticket-system
+description: Event ticketing system for concerts, cinema, and events with seat management
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+maintainers:
+  - name: Frans Sjöström
