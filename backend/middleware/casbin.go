@@ -17,11 +17,19 @@ func Authorize(enforcer *casbin.Enforcer) func(http.Handler) http.Handler {
 				return
 			}
 
+			// Determine user role based on is_super_admin flag
+			// Super admins get "admin" role which inherits from "organizer" and "customer"
+			// Regular users get "customer" role (can browse events and book tickets)
+			role := "customer"
+			if IsSuperAdmin(r.Context()) {
+				role = "admin"
+			}
+
 			// Check authorization with Casbin
-			// Subject: "user" role (all authenticated users)
+			// Subject: role from JWT ("admin" for super admins, "customer" for regular users)
 			// Object: request path
 			// Action: HTTP method
-			allowed, err := enforcer.Enforce("user", r.URL.Path, r.Method)
+			allowed, err := enforcer.Enforce(role, r.URL.Path, r.Method)
 			if err != nil {
 				http.Error(w, "Authorization error", http.StatusInternalServerError)
 				return
