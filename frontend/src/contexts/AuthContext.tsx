@@ -5,7 +5,7 @@ import { authApi } from '@/api/auth';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (accessToken: string, refreshToken: string) => Promise<void>;
+  login: (accessToken: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
   hasRole: (role: 'customer' | 'organizer' | 'admin') => boolean;
@@ -32,7 +32,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } catch (error) {
         console.error('Failed to fetch user:', error);
         localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
       } finally {
         setLoading(false);
       }
@@ -41,9 +40,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     fetchUser();
   }, []);
 
-  const login = async (accessToken: string, refreshToken: string) => {
+  const login = async (accessToken: string) => {
     localStorage.setItem('access_token', accessToken);
-    localStorage.setItem('refresh_token', refreshToken);
+    // Note: refresh_token is stored as HTTP-only cookie by auth service
 
     // Fetch user details
     const userData = await authApi.getMe();
@@ -52,7 +51,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = () => {
     localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
+    // Note: refresh_token cookie will be cleared by auth service logout endpoint
     setUser(null);
     window.location.href = '/login';
   };

@@ -8,11 +8,9 @@ export const authApi = {
     return response.data;
   },
 
-  // Refresh token
-  refresh: async (refreshToken: string) => {
-    const response = await apiClient.post<AuthResponse>('/auth/refresh', {
-      refresh_token: refreshToken,
-    });
+  // Refresh token (uses HTTP-only cookie)
+  refresh: async () => {
+    const response = await apiClient.post<AuthResponse>('/auth/refresh');
     return response.data;
   },
 

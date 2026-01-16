@@ -10,15 +10,14 @@ export const OAuthCallback: React.FC = () => {
   useEffect(() => {
     const handleCallback = async () => {
       const accessToken = searchParams.get('access_token');
-      const refreshToken = searchParams.get('refresh_token');
 
-      if (!accessToken || !refreshToken) {
+      if (!accessToken) {
         navigate('/login?error=auth_failed');
         return;
       }
 
       try {
-        await login(accessToken, refreshToken);
+        await login(accessToken);
         navigate('/');
       } catch (error) {
         console.error('Login failed:', error);

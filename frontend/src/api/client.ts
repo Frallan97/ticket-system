@@ -40,20 +40,16 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem('refresh_token');
-        if (!refreshToken) {
-          throw new Error('No refresh token');
-        }
-
         // Call auth service refresh endpoint
+        // Refresh token is sent automatically as HTTP-only cookie
         const { data } = await axios.post(
           `${AUTH_SERVICE_URL}/api/auth/refresh`,
-          { refresh_token: refreshToken }
+          {},
+          { withCredentials: true }
         );
 
-        // Save new tokens
+        // Save new access token
         localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('refresh_token', data.refresh_token);
 
         // Retry original request with new token
         if (originalRequest.headers) {
@@ -63,7 +59,6 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         // Refresh failed, logout user
         localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }
