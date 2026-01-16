@@ -144,7 +144,7 @@ export function App() {
 // Login page
 const Login = () => {
   const AUTH_SERVICE_URL = import.meta.env?.VITE_AUTH_SERVICE_URL || 'https://auth.vibeoholic.com';
-  const redirectUri = `${window.location.origin}/auth/callback`;
+  const redirectUri = window.location.origin;
 
   const handleGoogleLogin = () => {
     window.location.href = `${AUTH_SERVICE_URL}/api/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}`;
