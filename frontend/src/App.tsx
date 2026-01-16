@@ -5,6 +5,7 @@ import { RoleProtectedRoute } from '@/components/auth/RoleProtectedRoute';
 import { OAuthCallback } from '@/components/auth/OAuthCallback';
 import { Layout } from '@/components/layout/Layout';
 import { Toaster } from '@/components/ui/sonner';
+import { ThemeProvider } from '@/components/theme-provider';
 
 // Public pages
 import { Index } from '@/pages/public/Index';
@@ -28,9 +29,10 @@ import { Checkin } from '@/pages/organizer/Checkin';
 
 export function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Routes>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <BrowserRouter>
+        <AuthProvider>
+          <Routes>
           {/* Routes with layout */}
           <Route element={<Layout />}>
             {/* Public routes */}
@@ -134,10 +136,11 @@ export function App() {
           {/* Routes without layout */}
           <Route path="/login" element={<Login />} />
           <Route path="/auth/callback" element={<OAuthCallback />} />
-        </Routes>
-        <Toaster />
-      </AuthProvider>
-    </BrowserRouter>
+          </Routes>
+          <Toaster />
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

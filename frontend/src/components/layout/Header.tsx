@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Ticket, User } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export const Header = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -36,6 +37,8 @@ export const Header = () => {
                 My Tickets
               </Link>
 
+              <ThemeToggle />
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon">
@@ -58,9 +61,12 @@ export const Header = () => {
               </DropdownMenu>
             </>
           ) : (
-            <Button asChild>
-              <Link to="/login">Login</Link>
-            </Button>
+            <>
+              <ThemeToggle />
+              <Button asChild>
+                <Link to="/login">Login</Link>
+              </Button>
+            </>
           )}
         </nav>
       </div>
