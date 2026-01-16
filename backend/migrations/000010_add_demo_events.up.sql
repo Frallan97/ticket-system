@@ -1,10 +1,10 @@
 -- Add demo events for demonstration purposes
--- Uses the first user (admin/organizer) as the event organizer
+-- Uses the first user as the event organizer
 
 -- Insert demo events
 INSERT INTO events (organizer_id, title, description, venue_name, venue_address, event_date, doors_open, has_seating, image_url, status, max_capacity)
 SELECT
-    (SELECT id FROM users WHERE is_super_admin = TRUE LIMIT 1),
+    (SELECT id FROM users ORDER BY created_at ASC LIMIT 1),
     'Summer Music Festival 2026',
     'Join us for an unforgettable evening of live music featuring top artists from around the world. Experience incredible performances under the stars with food, drinks, and amazing vibes.',
     'Central Park Amphitheater',
@@ -15,11 +15,11 @@ SELECT
     'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&h=600&fit=crop',
     'published',
     5000
-WHERE EXISTS (SELECT 1 FROM users WHERE is_super_admin = TRUE LIMIT 1);
+WHERE EXISTS (SELECT 1 FROM users LIMIT 1);
 
 INSERT INTO events (organizer_id, title, description, venue_name, venue_address, event_date, doors_open, has_seating, image_url, status, max_capacity)
 SELECT
-    (SELECT id FROM users WHERE is_super_admin = TRUE LIMIT 1),
+    (SELECT id FROM users ORDER BY created_at ASC LIMIT 1),
     'Tech Conference 2026',
     'The premier technology conference featuring keynotes from industry leaders, hands-on workshops, and networking opportunities. Discover the latest innovations in AI, cloud computing, and software development.',
     'Innovation Center',
@@ -30,11 +30,11 @@ SELECT
     'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=600&fit=crop',
     'published',
     2000
-WHERE EXISTS (SELECT 1 FROM users WHERE is_super_admin = TRUE LIMIT 1);
+WHERE EXISTS (SELECT 1 FROM users LIMIT 1);
 
 INSERT INTO events (organizer_id, title, description, venue_name, venue_address, event_date, doors_open, has_seating, image_url, status, max_capacity)
 SELECT
-    (SELECT id FROM users WHERE is_super_admin = TRUE LIMIT 1),
+    (SELECT id FROM users ORDER BY created_at ASC LIMIT 1),
     'Comedy Night Live',
     'Get ready for a night of non-stop laughter with some of the funniest comedians in the business. Perfect for a date night or friends outing!',
     'Downtown Comedy Club',
@@ -45,11 +45,11 @@ SELECT
     'https://images.unsplash.com/photo-1585699324551-f6c309eedeca?w=800&h=600&fit=crop',
     'published',
     300
-WHERE EXISTS (SELECT 1 FROM users WHERE is_super_admin = TRUE LIMIT 1);
+WHERE EXISTS (SELECT 1 FROM users LIMIT 1);
 
 INSERT INTO events (organizer_id, title, description, venue_name, venue_address, event_date, doors_open, has_seating, image_url, status, max_capacity)
 SELECT
-    (SELECT id FROM users WHERE is_super_admin = TRUE LIMIT 1),
+    (SELECT id FROM users ORDER BY created_at ASC LIMIT 1),
     'Food & Wine Festival',
     'Indulge in exquisite cuisine from renowned chefs paired with premium wines from around the world. A culinary experience you won''t forget!',
     'Harbor Convention Center',
@@ -60,11 +60,11 @@ SELECT
     'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&h=600&fit=crop',
     'published',
     1500
-WHERE EXISTS (SELECT 1 FROM users WHERE is_super_admin = TRUE LIMIT 1);
+WHERE EXISTS (SELECT 1 FROM users LIMIT 1);
 
 INSERT INTO events (organizer_id, title, description, venue_name, venue_address, event_date, doors_open, has_seating, image_url, status, max_capacity)
 SELECT
-    (SELECT id FROM users WHERE is_super_admin = TRUE LIMIT 1),
+    (SELECT id FROM users ORDER BY created_at ASC LIMIT 1),
     'Rock Concert: The Legends',
     'Experience classic rock legends performing their greatest hits live. Featuring special guests and an incredible light show that will blow your mind!',
     'Metro Arena',
@@ -75,11 +75,11 @@ SELECT
     'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=800&h=600&fit=crop',
     'published',
     10000
-WHERE EXISTS (SELECT 1 FROM users WHERE is_super_admin = TRUE LIMIT 1);
+WHERE EXISTS (SELECT 1 FROM users LIMIT 1);
 
 INSERT INTO events (organizer_id, title, description, venue_name, venue_address, event_date, doors_open, has_seating, image_url, status, max_capacity)
 SELECT
-    (SELECT id FROM users WHERE is_super_admin = TRUE LIMIT 1),
+    (SELECT id FROM users ORDER BY created_at ASC LIMIT 1),
     'Art Exhibition: Modern Masters',
     'Explore contemporary art from emerging and established artists. This curated exhibition showcases innovative works across various mediums.',
     'City Art Gallery',
@@ -90,7 +90,7 @@ SELECT
     'https://images.unsplash.com/photo-1531913764164-f85c52e6e654?w=800&h=600&fit=crop',
     'published',
     500
-WHERE EXISTS (SELECT 1 FROM users WHERE is_super_admin = TRUE LIMIT 1);
+WHERE EXISTS (SELECT 1 FROM users LIMIT 1);
 
 -- Add ticket types for each event
 -- Summer Music Festival
