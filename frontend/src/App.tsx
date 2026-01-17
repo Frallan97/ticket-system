@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { CartProvider } from '@/contexts/CartContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { RoleProtectedRoute } from '@/components/auth/RoleProtectedRoute';
 import { OAuthCallback } from '@/components/auth/OAuthCallback';
@@ -14,6 +15,7 @@ import { EventDetail } from '@/pages/public/EventDetail';
 
 // Customer pages
 import { Checkout } from '@/pages/customer/Checkout';
+import { Cart } from '@/pages/customer/Cart';
 import { MyTickets } from '@/pages/customer/MyTickets';
 import { Bookings } from '@/pages/customer/Bookings';
 import { BookingDetail } from '@/pages/customer/BookingDetail';
@@ -32,7 +34,8 @@ export function App() {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
+          <CartProvider>
+            <Routes>
           {/* Routes with layout */}
           <Route element={<Layout />}>
             {/* Public routes */}
@@ -46,6 +49,14 @@ export function App() {
             element={
               <ProtectedRoute>
                 <Checkout />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute>
+                <Cart />
               </ProtectedRoute>
             }
           />
@@ -138,6 +149,7 @@ export function App() {
           <Route path="/auth/callback" element={<OAuthCallback />} />
           </Routes>
           <Toaster />
+          </CartProvider>
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>
@@ -150,7 +162,9 @@ const Login = () => {
   const redirectUri = window.location.origin;
 
   const handleGoogleLogin = () => {
-    window.location.href = `${AUTH_SERVICE_URL}/api/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    const returnUrl = localStorage.getItem('auth_return_url') || '/';
+    const state = encodeURIComponent(returnUrl);
+    window.location.href = `${AUTH_SERVICE_URL}/api/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`;
   };
 
   return (

@@ -40,9 +40,10 @@ export const TicketCard: React.FC<TicketCardProps> = ({
         {showQR && <TicketQRCode ticket={ticket} />}
 
         <div className="space-y-2 mt-4">
-          {ticket.seat_id && (
+          {ticket.seat_id && ticket.seat_details && (
             <div className="text-sm">
-              <span className="font-semibold">Seat:</span> Details available
+              <span className="font-semibold">Seat:</span>{' '}
+              {ticket.seat_details.section} - Row {ticket.seat_details.row_label}, Seat {ticket.seat_details.seat_number}
             </div>
           )}
 

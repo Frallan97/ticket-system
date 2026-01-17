@@ -62,10 +62,12 @@ func main() {
 	}
 	log.Println("MinIO initialized successfully")
 
-	// Start background job to cleanup expired seat locks
+	// Start background jobs
 	ctx := context.Background()
 	services.StartLockCleanupJob(ctx)
 	log.Println("Seat lock cleanup job started")
+	services.StartCartCleanupJob(ctx)
+	log.Println("Cart cleanup job started")
 
 	// Setup router with auth
 	router := handlers.SetupRouter(cfg, enforcer)

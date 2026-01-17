@@ -1,5 +1,12 @@
 // Ticket types
 
+export interface SeatDetail {
+  seat_id: number;
+  section: string;
+  row_label: string;
+  seat_number: string;
+}
+
 export interface Ticket {
   id: number;
   booking_id: number;
@@ -14,6 +21,7 @@ export interface Ticket {
   is_checked_in: boolean;
   checked_in_at: string | null;
   checked_in_by: string | null;
+  seat_details?: SeatDetail;
   created_at: string;
   updated_at: string;
 }

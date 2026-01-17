@@ -1,23 +1,31 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Event } from '@/types/event';
 import { TicketType } from '@/types/ticketType';
 import { eventsApi } from '@/api/events';
 import { ticketTypesApi } from '@/api/ticketTypes';
+import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Calendar, MapPin, Clock, Ticket, AlertCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Calendar, MapPin, Clock, Ticket, AlertCircle, ShoppingCart } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 export const EventDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedQuantities, setSelectedQuantities] = useState<Record<number, number>>({});
 
   useEffect(() => {
     const fetchEventData = async () => {
@@ -44,6 +52,43 @@ export const EventDetail = () => {
 
     fetchEventData();
   }, [id]);
+
+  const hasSelectedTickets = () => {
+    return Object.values(selectedQuantities).some(qty => qty > 0);
+  };
+
+  const handleAddToCart = async () => {
+    if (!event) return;
+
+    try {
+      // Add each selected ticket type to cart
+      for (const [ticketTypeIdStr, quantity] of Object.entries(selectedQuantities)) {
+        if (quantity > 0) {
+          await addToCart({
+            event_id: event.id,
+            ticket_type_id: parseInt(ticketTypeIdStr),
+            quantity: quantity,
+          });
+        }
+      }
+
+      toast.success('Tickets added to cart!', {
+        description: `${Object.values(selectedQuantities).reduce((a, b) => a + b, 0)} ticket(s) added`,
+        action: {
+          label: 'View Cart',
+          onClick: () => navigate('/cart'),
+        },
+      });
+
+      // Reset quantities
+      setSelectedQuantities({});
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+      toast.error('Failed to add to cart', {
+        description: error instanceof Error ? error.message : 'Please try again',
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -193,9 +238,54 @@ export const EventDetail = () => {
               )}
 
               {event.status === 'published' && ticketTypes.length > 0 && (
-                <Button asChild className="w-full" size="lg">
-                  <Link to={`/checkout/${event.id}`}>Book Tickets</Link>
-                </Button>
+                <div className="space-y-2">
+                  {/* For assigned seating events, go directly to checkout */}
+                  {event.has_seating ? (
+                    <Button asChild className="w-full" size="lg">
+                      <Link to={`/checkout/${event.id}`}>Select Seats & Book</Link>
+                    </Button>
+                  ) : (
+                    <>
+                      {/* For general admission, show quantity selectors */}
+                      <div className="space-y-3 mb-4">
+                        {ticketTypes.filter(tt => tt.is_active).map((ticketType) => (
+                          <div key={ticketType.id} className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              min="0"
+                              max={ticketType.quantity_available - ticketType.quantity_sold}
+                              value={selectedQuantities[ticketType.id] || 0}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value) || 0;
+                                setSelectedQuantities(prev => ({
+                                  ...prev,
+                                  [ticketType.id]: value
+                                }));
+                              }}
+                              className="w-20"
+                            />
+                            <span className="text-sm flex-1">{ticketType.name}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <Button
+                        className="w-full"
+                        size="lg"
+                        variant="outline"
+                        onClick={handleAddToCart}
+                        disabled={!hasSelectedTickets()}
+                      >
+                        <ShoppingCart className="mr-2 h-4 w-4" />
+                        Add to Cart
+                      </Button>
+
+                      <Button asChild className="w-full" size="lg">
+                        <Link to={`/checkout/${event.id}`}>Book Now</Link>
+                      </Button>
+                    </>
+                  )}
+                </div>
               )}
 
               {event.status !== 'published' && (

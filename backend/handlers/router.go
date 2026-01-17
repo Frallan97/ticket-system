@@ -100,6 +100,15 @@ func SetupRouter(cfg *config.Config, enforcer *casbin.Enforcer) http.Handler {
 	authorized.HandleFunc("/events/{id:[0-9]+}/seats/bulk", controllers.BulkCreateSeats).Methods("POST", "OPTIONS")
 	authorized.HandleFunc("/bookings/lock-seats", controllers.LockSeats).Methods("POST", "OPTIONS")
 
+	// Cart routes (accessible to both guests and authenticated users)
+	api.HandleFunc("/cart", controllers.GetCart).Methods("GET", "OPTIONS")
+	api.HandleFunc("/cart/items", controllers.AddToCart).Methods("POST", "OPTIONS")
+	api.HandleFunc("/cart/items/{id:[0-9]+}", controllers.UpdateCartItem).Methods("PUT", "OPTIONS")
+	api.HandleFunc("/cart/items/{id:[0-9]+}", controllers.RemoveCartItem).Methods("DELETE", "OPTIONS")
+	api.HandleFunc("/cart", controllers.ClearCart).Methods("DELETE", "OPTIONS")
+	// Cart merge requires authentication
+	protected.HandleFunc("/cart/merge", controllers.MergeGuestCart).Methods("POST", "OPTIONS")
+
 	// Booking routes (customer)
 	authorized.HandleFunc("/bookings", controllers.CreateBooking).Methods("POST", "OPTIONS")
 	authorized.HandleFunc("/bookings", controllers.GetBookings).Methods("GET", "OPTIONS")

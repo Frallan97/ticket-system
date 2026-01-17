@@ -320,14 +320,16 @@ func GetBookingByID(ctx context.Context, bookingID int, customerID uuid.UUID) (*
 		return nil, fmt.Errorf("failed to fetch booking: %w", err)
 	}
 
-	// Get tickets for this booking
+	// Get tickets for this booking with seat details
 	ticketsQuery := `
-		SELECT id, booking_id, event_id, ticket_type_id, seat_id, ticket_code,
-			   qr_code_data, price_paid, attendee_name, attendee_email,
-			   is_checked_in, checked_in_at, checked_in_by, created_at, updated_at
-		FROM tickets
-		WHERE booking_id = $1
-		ORDER BY id
+		SELECT t.id, t.booking_id, t.event_id, t.ticket_type_id, t.seat_id, t.ticket_code,
+			   t.qr_code_data, t.price_paid, t.attendee_name, t.attendee_email,
+			   t.is_checked_in, t.checked_in_at, t.checked_in_by, t.created_at, t.updated_at,
+			   s.section, s.row_label, s.seat_number
+		FROM tickets t
+		LEFT JOIN seats s ON t.seat_id = s.id
+		WHERE t.booking_id = $1
+		ORDER BY t.id
 	`
 
 	rows, err := database.DB.QueryContext(ctx, ticketsQuery, bookingID)
@@ -339,15 +341,29 @@ func GetBookingByID(ctx context.Context, bookingID int, customerID uuid.UUID) (*
 	tickets := []models.Ticket{}
 	for rows.Next() {
 		var ticket models.Ticket
+		var seatSection, seatRow, seatNumber *string
+
 		err := rows.Scan(
 			&ticket.ID, &ticket.BookingID, &ticket.EventID, &ticket.TicketTypeID,
 			&ticket.SeatID, &ticket.TicketCode, &ticket.QRCodeData, &ticket.PricePaid,
 			&ticket.AttendeeName, &ticket.AttendeeEmail, &ticket.IsCheckedIn,
 			&ticket.CheckedInAt, &ticket.CheckedInBy, &ticket.CreatedAt, &ticket.UpdatedAt,
+			&seatSection, &seatRow, &seatNumber,
 		)
 		if err != nil {
 			continue
 		}
+
+		// Populate seat details if present
+		if seatSection != nil && seatRow != nil && seatNumber != nil {
+			ticket.SeatDetails = &models.SeatDetail{
+				SeatID:     *ticket.SeatID,
+				Section:    *seatSection,
+				RowLabel:   *seatRow,
+				SeatNumber: *seatNumber,
+			}
+		}
+
 		tickets = append(tickets, ticket)
 	}
 

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { bookingsApi } from '@/api/bookings';
+import { eventsApi } from '@/api/events';
 import { Booking } from '@/types/booking';
 import { Ticket } from '@/types/ticket';
+import { Event } from '@/types/event';
 import { TicketCard } from '@/components/tickets/TicketCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -10,6 +12,7 @@ import { AlertCircle } from 'lucide-react';
 export const MyTickets = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [tickets, setTickets] = useState<Record<number, Ticket[]>>({});
+  const [events, setEvents] = useState<Record<number, Event>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,6 +33,19 @@ export const MyTickets = () => {
         );
 
         setTickets(ticketsData);
+
+        // Fetch event details for all unique event IDs
+        const eventIds = [...new Set(bookingsData.map(b => b.event_id))];
+        const eventsData = await Promise.all(
+          eventIds.map(id => eventsApi.getById(id))
+        );
+
+        const eventsMap = eventsData.reduce((acc, event) => {
+          acc[event.id] = event;
+          return acc;
+        }, {} as Record<number, Event>);
+
+        setEvents(eventsMap);
       } catch (err) {
         setError('Failed to load tickets');
         console.error('Failed to fetch tickets:', err);
@@ -88,7 +104,8 @@ export const MyTickets = () => {
             <TicketCard
               key={ticket.id}
               ticket={ticket}
-              eventTitle={`Event #${ticket.event_id}`}
+              eventTitle={events[ticket.event_id]?.title || `Event #${ticket.event_id}`}
+              eventDate={events[ticket.event_id]?.event_date}
               showQR={true}
             />
           ))}
