@@ -9,6 +9,7 @@ import (
 	"github.com/frallan97/ticket-system/backend/controllers"
 	"github.com/frallan97/ticket-system/backend/middleware"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // ConfigMiddleware adds config to request context
@@ -29,6 +30,7 @@ func SetupRouter(cfg *config.Config, enforcer *casbin.Enforcer) http.Handler {
 	// Global middleware - CORS must be first!
 	r.Use(middleware.CORS)
 	r.Use(middleware.Logger)
+	r.Use(middleware.Metrics)
 	r.Use(middleware.Recovery)
 	r.Use(ConfigMiddleware(cfg))
 
@@ -62,6 +64,9 @@ func SetupRouter(cfg *config.Config, enforcer *casbin.Enforcer) http.Handler {
 		w.Write([]byte("OK"))
 	}).Methods("GET", "OPTIONS")
 
+	// Prometheus metrics endpoint
+	r.Handle("/metrics", promhttp.Handler()).Methods("GET")
+
 	// Auth endpoints (public except /me)
 	api.HandleFunc("/auth/refresh", controllers.RefreshToken).Methods("POST", "OPTIONS")
 	api.HandleFunc("/auth/logout", controllers.Logout).Methods("POST", "OPTIONS")
@@ -94,6 +99,15 @@ func SetupRouter(cfg *config.Config, enforcer *casbin.Enforcer) http.Handler {
 	authorized.HandleFunc("/events/{id:[0-9]+}/ticket-types", controllers.CreateTicketType).Methods("POST", "OPTIONS")
 	authorized.HandleFunc("/ticket-types/{id:[0-9]+}", controllers.UpdateTicketType).Methods("PATCH", "OPTIONS")
 	authorized.HandleFunc("/ticket-types/{id:[0-9]+}", controllers.DeleteTicketType).Methods("DELETE", "OPTIONS")
+
+	// Venue routes (organizer only)
+	api.HandleFunc("/venues/{id:[0-9]+}", controllers.GetVenueByID).Methods("GET", "OPTIONS")
+	authorized.HandleFunc("/venues", controllers.GetVenues).Methods("GET", "OPTIONS")
+	authorized.HandleFunc("/venues", controllers.CreateVenue).Methods("POST", "OPTIONS")
+	authorized.HandleFunc("/venues/{id:[0-9]+}", controllers.UpdateVenue).Methods("PATCH", "OPTIONS")
+	authorized.HandleFunc("/venues/{id:[0-9]+}", controllers.DeleteVenue).Methods("DELETE", "OPTIONS")
+	authorized.HandleFunc("/venues/{id:[0-9]+}/seat-map", controllers.CreateSeatMap).Methods("POST", "OPTIONS")
+	authorized.HandleFunc("/venues/copy-seat-map", controllers.CopySeatMapToEvent).Methods("POST", "OPTIONS")
 
 	// Seat routes
 	api.HandleFunc("/events/{id:[0-9]+}/seats", controllers.GetSeats).Methods("GET", "OPTIONS")

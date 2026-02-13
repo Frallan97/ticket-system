@@ -109,3 +109,9 @@ imagePullSecrets:
   - name: ghcr-pull-secret
 
 namespace: ticket-system
+
+# Prometheus ServiceMonitor for metrics collection
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  scrapeTimeout: 10s
